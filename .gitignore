@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+.DS_Store
+boot-setup/installed.txt
+boot-setup/kiosk-installed.txt

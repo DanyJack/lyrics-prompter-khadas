@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Prompter
+Exec=/home/khadas/lyrics-prompter/boot-setup/start-prompter.sh
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

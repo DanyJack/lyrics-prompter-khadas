@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <style>
+    text{font-family:Arial,sans-serif;fill:#182334} .title{font-size:31px;font-weight:bold}.sub{font-size:19px;fill:#48576a}.lbl{font-size:21px;font-weight:bold}.small{font-size:17px}.pin{font-size:17px;font-family:monospace}.wire{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.gnd{stroke:#222}.signal{stroke:#e0ac00}.note{fill:#fff6ca;stroke:#e0ac00;stroke-width:2}
+  </style>
+  <rect width="1200" height="760" fill="#f7fafc"/>
+  <text x="60" y="58" class="title">Pedale USB — cablaggio iniziale a 3 pulsanti</text>
+  <text x="60" y="90" class="sub">Raspberry Pi Pico W · pulsanti momentanei normalmente aperti · vista dall’interno</text>
+  <!-- switches -->
+  <g transform="translate(60 150)">
+    <text x="80" y="-20" class="lbl">PREV</text><text x="55" y="8" class="sub">← oppure ↑</text>
+    <rect x="15" y="30" width="190" height="115" rx="18" fill="white" stroke="#182334" stroke-width="3"/>
+    <circle cx="75" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/><circle cx="150" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/>
+    <text x="48" y="126" class="small">terminali</text>
+  </g>
+  <g transform="translate(60 335)">
+    <text x="55" y="-20" class="lbl">SELECT / MENU</text><text x="63" y="8" class="sub">Invio oppure Spazio</text>
+    <rect x="15" y="30" width="190" height="115" rx="18" fill="white" stroke="#182334" stroke-width="3"/>
+    <circle cx="75" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/><circle cx="150" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/>
+    <text x="48" y="126" class="small">terminali</text>
+  </g>
+  <g transform="translate(60 520)">
+    <text x="82" y="-20" class="lbl">NEXT</text><text x="55" y="8" class="sub">→ oppure ↓</text>
+    <rect x="15" y="30" width="190" height="115" rx="18" fill="white" stroke="#182334" stroke-width="3"/>
+    <circle cx="75" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/><circle cx="150" cy="88" r="15" fill="#f4f7fb" stroke="#182334" stroke-width="3"/>
+    <text x="48" y="126" class="small">terminali</text>
+  </g>
+  <!-- pico -->
+  <g transform="translate(760 155)">
+    <rect x="0" y="0" width="330" height="455" rx="20" fill="#4d803c" stroke="#183d25" stroke-width="4"/>
+    <text x="75" y="55" class="lbl" fill="white">Raspberry Pi Pico W</text>
+    <rect x="120" y="-20" width="90" height="40" rx="6" fill="#273544"/><text x="132" y="9" class="small" fill="white">micro-USB</text>
+    <text x="38" y="125" class="pin" fill="white">fisico 3  GND</text>
+    <text x="38" y="195" class="pin" fill="white">fisico 4  GP2</text>
+    <text x="38" y="265" class="pin" fill="white">fisico 5  GP3</text>
+    <text x="38" y="335" class="pin" fill="white">fisico 6  GP4</text>
+    <circle cx="15" cy="118" r="12" fill="#222"/><circle cx="15" cy="188" r="12" fill="#e0ac00"/><circle cx="15" cy="258" r="12" fill="#e0ac00"/><circle cx="15" cy="328" r="12" fill="#e0ac00"/>
+  </g>
+  <!-- wiring -->
+  <path d="M135 238 H500 V273 H775" fill="none" stroke="#222" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M135 423 H500 V273" fill="none" stroke="#222" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M135 608 H500 V273" fill="none" stroke="#222" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M210 238 H570 V343 H775" fill="none" stroke="#e0ac00" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M210 423 H635 V413 H775" fill="none" stroke="#e0ac00" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M210 608 H690 V483 H775" fill="none" stroke="#e0ac00" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="420" y="650" width="690" height="70" rx="12" class="note"/>
+  <text x="445" y="680" class="small">Nero = GND comune: un terminale di ogni pulsante, collegati tra loro e al pin GND.</text>
+  <text x="445" y="707" class="small">Giallo = segnale: l’altro terminale va rispettivamente a GP2, GP3 e GP4.</text>
+</svg>
