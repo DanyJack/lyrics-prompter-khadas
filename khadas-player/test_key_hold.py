@@ -94,6 +94,31 @@ class HoldTests(unittest.TestCase):
         self.assertEqual(self.ui.navigation.selection, player.MENU_PAGE_SIZE + 1)
         self.assertFalse(self.clock.pending)
 
+    def test_holding_navigation_in_song_moves_only_once(self):
+        pages = tuple(player.Page(f'page-{i}.png', '0' * 64) for i in range(4))
+        song = player.Song('song', 'Song', '', pages)
+        self.ui.navigation = player.Navigation(player.Setlist(Path('.'), None, (song,)))
+        self.ui.navigation.select()
+
+        self.ui.start_navigation_hold(1, 1)
+        for _ in range(8):
+            self.clock.advance(100)
+            self.ui.start_navigation_hold(1, 1)
+        self.assertEqual(self.ui.navigation.page, 1)
+        self.assertFalse(self.clock.pending)
+
+        self.release()
+        self.ui.start_navigation_hold(1, 1)
+        self.assertEqual(self.ui.navigation.page, 2)
+        self.release()
+
+        self.ui.start_navigation_hold(2, -1)
+        for _ in range(8):
+            self.clock.advance(100)
+            self.ui.start_navigation_hold(2, -1)
+        self.assertEqual(self.ui.navigation.page, 1)
+        self.assertFalse(self.clock.pending)
+
 
 if __name__ == '__main__':
     unittest.main()

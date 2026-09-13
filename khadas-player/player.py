@@ -432,13 +432,6 @@ class KhadasPlayer:
     def start_navigation_hold(self, key: int, direction: int) -> None:
         """A short press moves one row; a hold advances full menu pages."""
         self.cancel_select_hold()
-        if not self.navigation.in_menu:
-            if direction < 0:
-                self.navigation.previous()
-            else:
-                self.navigation.next()
-            self.redraw()
-            return
         if self.held_navigation_key == key:
             return  # Ignore keyboard autorepeat until the physical key is released.
         self.cancel_navigation_hold()
@@ -449,7 +442,8 @@ class KhadasPlayer:
         else:
             self.navigation.next()
         self.redraw()
-        self.hold_timer = GLib.timeout_add(650, self.advance_held_menu_page, key, direction)
+        if self.navigation.in_menu:
+            self.hold_timer = GLib.timeout_add(650, self.advance_held_menu_page, key, direction)
 
     def advance_held_menu_page(self, key: int, direction: int) -> bool:
         self.hold_timer = None
