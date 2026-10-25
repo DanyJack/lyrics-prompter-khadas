@@ -217,6 +217,10 @@ class ImportScreen:
 
     def on_key(self, _widget, event):
         key, Gdk = event.keyval, self.api.Gdk
+        if key == Gdk.KEY_F12:
+            if not self.busy:
+                self.api.PowerScreen(self.window)
+            return True
         if key in self.pressed:
             return True
         self.pressed.add(key)

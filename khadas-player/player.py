@@ -25,8 +25,9 @@ PACKAGE_DIR = "LYRICS_PROMPTER"
 MANIFEST_NAME = "manifest.json"
 SCHEMA = "lyrics-prompter/khadas-list"
 VERSION = 1
-PAGE_SIZE = (1050, 1680)
+PAGE_SIZE = (1680, 1050)
 MENU_PAGE_SIZE = 20
+MENU_ROWS_PER_COLUMN = MENU_PAGE_SIZE // 2
 
 
 class ImportErrorMessage(ValueError):
@@ -102,7 +103,9 @@ def page_from_manifest(root: Path, raw: Any, expected_path: str | None = None) -
     if sha256_file(file_path) != checksum:
         raise ImportErrorMessage(f"Controllo d'integrità fallito: {relative_path}.")
     if read_png_size(file_path) != PAGE_SIZE:
-        raise ImportErrorMessage(f"Dimensioni non valide per {relative_path}: richieste 1050×1680 px.")
+        raise ImportErrorMessage(
+            f"Dimensioni non valide per {relative_path}: richieste {PAGE_SIZE[0]}×{PAGE_SIZE[1]} px."
+        )
     return Page(relative_path, checksum)
 
 
@@ -119,7 +122,7 @@ def validate_package(root: Path) -> Setlist:
         raise ImportErrorMessage("Il manifest non appartiene a un export Khadas compatibile.")
     display = manifest.get("display")
     if not isinstance(display, dict) or (display.get("width"), display.get("height")) != PAGE_SIZE:
-        raise ImportErrorMessage("Il formato display deve essere 1050×1680 px.")
+        raise ImportErrorMessage("Il formato display deve essere 1680×1050 px.")
 
     opening_raw = manifest.get("opening")
     opening = None if opening_raw is None else page_from_manifest(root, opening_raw, "opening.png")
@@ -313,8 +316,9 @@ def load_gtk() -> None:
         window, box { background: #000000; color: #ffffff; }
         label { color: #ffffff; font-size: 34px; }
         .setlist-title { color: #ffffff; font-size: 52px; font-weight: 800; }
-        .setlist-row { color: #d5d5d5; font-size: 37px; }
-        .setlist-selected { color: #ffffff; font-size: 42px; font-weight: 800; }
+        .setlist-row { color: #d5d5d5; font-size: 32px; }
+        .setlist-selected { color: #ffffff; background: #324862; font-size: 34px; font-weight: 800; }
+        .setlist-meta { color: #aaa; font-size: 25px; }
         .import-error { color: #ff8c8c; font-size: 48px; font-weight: 800; }
     """)
     Gtk.StyleContext.add_provider_for_screen(
@@ -379,6 +383,10 @@ class KhadasPlayer:
         key = event.keyval
         if key in (Gdk.KEY_Escape,):
             self.window.destroy()
+        elif key == Gdk.KEY_F12:
+            self.cancel_navigation_hold()
+            self.cancel_select_hold()
+            PowerScreen(self.window)
         elif key in (Gdk.KEY_Page_Up, Gdk.KEY_Left, Gdk.KEY_Up):
             self.start_navigation_hold(key, -1)
         elif key in (Gdk.KEY_Page_Down, Gdk.KEY_Right, Gdk.KEY_Down):
@@ -458,33 +466,152 @@ class KhadasPlayer:
             self.content.remove(child)
         if self.navigation.in_menu:
             menu = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
-            menu.set_border_width(58)
-            if self.navigation.menu_page > 0:
-                previous_hint = Gtk.Label(label="▲")
-                previous_hint.set_halign(Gtk.Align.END)
-                menu.pack_start(previous_hint, False, False, 0)
+            menu.set_border_width(48)
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            title = Gtk.Label(label="SCALETTA")
+            title.get_style_context().add_class("setlist-title")
+            title.set_halign(Gtk.Align.START)
+            page_label = Gtk.Label(label=f"Pagina {self.navigation.menu_page + 1}/{self.navigation.menu_page_count}")
+            page_label.get_style_context().add_class("setlist-meta")
+            page_label.set_halign(Gtk.Align.END)
+            header.pack_start(title, True, True, 0)
+            header.pack_start(page_label, True, True, 0)
+            menu.pack_start(header, False, False, 0)
+            grid = Gtk.Grid()
+            grid.set_column_homogeneous(True)
+            grid.set_column_spacing(36)
+            grid.set_row_spacing(12)
             for entry_index, (label, song) in self.navigation.visible_entries:
-                prefix = "› " if entry_index == self.navigation.selection else "  "
-                row = Gtk.Label(label=f"{prefix}{label}")
+                position = entry_index % MENU_PAGE_SIZE
+                column, line = divmod(position, MENU_ROWS_PER_COLUMN)
+                prefix = "›" if entry_index == self.navigation.selection else " "
+                row = Gtk.Label(label=f"{prefix} {entry_index + 1:02d}  {label}")
                 row.get_style_context().add_class(
                     "setlist-selected" if entry_index == self.navigation.selection else "setlist-row"
                 )
-                row.set_halign(Gtk.Align.START)
-                row.set_justify(Gtk.Justification.LEFT)
-                menu.pack_start(row, False, False, 0)
-            if self.navigation.menu_page < self.navigation.menu_page_count - 1:
-                next_hint = Gtk.Label(label="▼")
-                next_hint.set_halign(Gtk.Align.END)
-                next_hint.set_valign(Gtk.Align.END)
-                next_hint.set_vexpand(True)
-                menu.pack_start(next_hint, True, True, 0)
+                row.set_xalign(0)
+                row.set_hexpand(True)
+                row.set_ellipsize(Pango.EllipsizeMode.END)
+                row.set_size_request(0, 57)
+                grid.attach(row, column, line, 1, 1)
+            menu.pack_start(grid, True, True, 0)
+            footer = Gtk.Label(label="Prev/Next: brano    •    pressione lunga: pagina    •    Select: apri")
+            footer.get_style_context().add_class("setlist-meta")
+            footer.set_halign(Gtk.Align.START)
+            menu.pack_start(footer, False, False, 0)
             self.content.pack_start(menu, True, True, 0)
         else:
-            image = Gtk.Image.new_from_file(str(self.navigation.image_path))
-            image.set_hexpand(True); image.set_vexpand(True)
-            image.set_halign(Gtk.Align.FILL); image.set_valign(Gtk.Align.FILL)
+            image = Gtk.DrawingArea()
+            image.set_size_request(1, 1)
+            image.connect("draw", self.draw_page, GdkPixbuf.Pixbuf.new_from_file(str(self.navigation.image_path)))
             self.content.pack_start(image, True, True, 0)
         self.content.show_all()
+
+    def draw_page(self, widget: Any, context: Any, pixbuf: Any) -> bool:
+        """Fit the exported page inside the current display without cropping."""
+        allocation = widget.get_allocation()
+        scale = min(allocation.width / pixbuf.get_width(), allocation.height / pixbuf.get_height())
+        context.translate((allocation.width - pixbuf.get_width() * scale) / 2,
+                          (allocation.height - pixbuf.get_height() * scale) / 2)
+        context.scale(scale, scale)
+        Gdk.cairo_set_source_pixbuf(context, pixbuf, 0, 0)
+        context.paint()
+        return False
+
+
+class PowerScreen:
+    """Explicit reboot/shutdown choice, opened by the pedal's held chord."""
+
+    ACTIONS = ("RIAVVIA", "ANNULLA", "SPEGNI")
+
+    def __init__(self, parent_window: Any) -> None:
+        self.parent_window = parent_window
+        self.selection = 1  # Start on the safe choice.
+        self.pressed: set[int] = set()
+        self.busy = False
+        self.error = ""
+        self.window = Gtk.Window(title="Alimentazione")
+        self.window.set_decorated(False)
+        self.window.fullscreen()
+        self.window.connect("key-press-event", self.on_key)
+        self.window.connect("key-release-event", self.on_release)
+        self.window.connect("delete-event", lambda *_args: True)
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=28)
+        self.box.set_halign(Gtk.Align.CENTER)
+        self.box.set_valign(Gtk.Align.CENTER)
+        self.window.add(self.box)
+        self.redraw()
+        self.window.show_all()
+        self.window.get_window().set_cursor(Gdk.Cursor.new_for_display(
+            self.window.get_display(), Gdk.CursorType.BLANK_CURSOR
+        ))
+        self.parent_window.hide()
+
+    def redraw(self) -> None:
+        for child in self.box.get_children():
+            self.box.remove(child)
+        title = Gtk.Label(label="RIAVVIO O SPEGNIMENTO")
+        title.get_style_context().add_class("setlist-title")
+        self.box.pack_start(title, False, False, 0)
+        for index, action in enumerate(self.ACTIONS):
+            label = Gtk.Label(label=("›  " if index == self.selection else "    ") + action)
+            label.get_style_context().add_class(
+                "setlist-selected" if index == self.selection else "setlist-row"
+            )
+            label.set_size_request(440, 66)
+            label.set_xalign(0.5)
+            self.box.pack_start(label, False, False, 0)
+        hint = Gtk.Label(label=self.error or "Prev/Next: scegli    •    Select: conferma")
+        hint.get_style_context().add_class("setlist-meta")
+        self.box.pack_start(hint, False, False, 0)
+        self.box.show_all()
+
+    def on_key(self, _widget: Any, event: Any) -> bool:
+        key = event.keyval
+        if key in self.pressed or self.busy:
+            return True
+        self.pressed.add(key)
+        if key == Gdk.KEY_Escape:
+            self.cancel()
+        elif key in (Gdk.KEY_Page_Up, Gdk.KEY_Left, Gdk.KEY_Up):
+            self.selection = max(0, self.selection - 1)
+            self.error = ""
+            self.redraw()
+        elif key in (Gdk.KEY_Page_Down, Gdk.KEY_Right, Gdk.KEY_Down):
+            self.selection = min(len(self.ACTIONS) - 1, self.selection + 1)
+            self.error = ""
+            self.redraw()
+        elif key in (Gdk.KEY_Return, Gdk.KEY_KP_Enter, Gdk.KEY_space):
+            self.confirm()
+        return True
+
+    def on_release(self, _widget: Any, event: Any) -> bool:
+        self.pressed.discard(event.keyval)
+        return True
+
+    def cancel(self) -> None:
+        self.window.destroy()
+        self.parent_window.show_all()
+        self.parent_window.present()
+
+    def confirm(self) -> None:
+        if self.selection == 1:
+            self.cancel()
+            return
+        action = "reboot" if self.selection == 0 else "poweroff"
+        try:
+            subprocess.run(["loginctl", action], check=True, capture_output=True,
+                           text=True, timeout=8)
+        except (OSError, subprocess.SubprocessError):
+            self.error = "Comando non riuscito. Select: annulla e riprova."
+            self.selection = 1
+            self.redraw()
+            return
+        self.busy = True
+        for child in self.box.get_children():
+            self.box.remove(child)
+        self.box.pack_start(Gtk.Label(label="Arresto in corso…"), False, False, 0)
+        self.box.show_all()
 
 
 class SavedListScreen:
@@ -523,6 +650,8 @@ class SavedListScreen:
         key = event.keyval
         if key == Gdk.KEY_Escape:
             self.window.destroy()
+        elif key == Gdk.KEY_F12:
+            PowerScreen(self.window)
         elif key in (Gdk.KEY_Page_Up, Gdk.KEY_Left, Gdk.KEY_Up):
             self.activated = True
             self.window.destroy()

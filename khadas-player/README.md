@@ -4,6 +4,15 @@ Player offline per gli export `LYRICS_PROMPTER/` dell'editor. Non legge o
 modifica testo: conserva soltanto l'ultima scaletta Khadas completamente
 verificata, per poterla riusare al successivo avvio.
 
+Il monitor e le pagine sono orizzontali (1680×1050). La scaletta presenta
+20 voci per pagina in due colonne di 10: Prev/Next scorrono prima la colonna
+sinistra dall'alto al basso e poi quella destra. Una pressione lunga di
+Prev/Next passa alla pagina precedente/successiva dell'elenco.
+Tenere insieme Prev e Next per tre secondi apre il menu alimentazione.
+Prev/Next scelgono Riavvia, Annulla o Spegni; Select conferma. La selezione
+iniziale è Annulla. Da tastiera USB si può aprire lo stesso menu con `F12`.
+Durante una copia da USB il menu resta disabilitato.
+
 ## Importazione durante prove e live
 
 Nella scaletta, tenere Select/Menu premuto per 900 ms apre la richiesta di
@@ -43,7 +52,7 @@ rimane salvata sul dispositivo, anche dopo lo spegnimento.
 {
   "schema": "lyrics-prompter/khadas-list",
   "version": 1,
-  "display": { "width": 1050, "height": 1680 },
+  "display": { "width": 1680, "height": 1050 },
   "opening": { "path": "opening.png", "sha256": "<64 caratteri esadecimali>" },
   "songs": [
     {
@@ -61,11 +70,13 @@ rimane salvata sul dispositivo, anche dopo lo spegnimento.
 }
 ```
 
-`opening` può essere `null`. Ogni pagina deve essere un PNG 1050×1680 e deve
+`opening` può essere `null`. Ogni pagina deve essere un PNG 1680×1050 e deve
 avere un percorso numerato consecutivamente (`page-001.png`, `page-002.png`,
 ecc.). Il player copia prima l'intero pacchetto in una cache temporanea,
 verifica manifest, struttura, checksum e dimensioni, poi attiva la lista.
 Un errore non sostituisce la lista già attiva.
+Le vecchie scalette 1050×1680 non sono più accettate; occorre esportarle
+nuovamente in orizzontale.
 
 ```bash
 python3 player.py --usb-root /percorso/della/chiavetta

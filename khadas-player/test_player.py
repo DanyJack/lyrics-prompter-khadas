@@ -5,10 +5,10 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from player import ImportErrorMessage, MENU_PAGE_SIZE, Navigation, PACKAGE_DIR, Page, Setlist, SetlistStore, Song
+from player import ImportErrorMessage, MENU_PAGE_SIZE, Navigation, PACKAGE_DIR, Page, Setlist, SetlistStore, Song, validate_package
 
 
-def png(width=1050, height=1680):
+def png(width=1680, height=1050):
     return b"\x89PNG\r\n\x1a\n" + (13).to_bytes(4, "big") + b"IHDR" + width.to_bytes(4, "big") + height.to_bytes(4, "big") + b"\x08\x02\x00\x00\x00"
 
 
@@ -21,7 +21,7 @@ def package(root: Path, corrupt=False):
     digest = hashlib.sha256(contents).hexdigest()
     if corrupt:
         digest = "0" * 64
-    manifest = {"schema": "lyrics-prompter/khadas-list", "version": 1, "display": {"width": 1050, "height": 1680}, "opening": None, "songs": [{"id": "song-1-test", "title": "Test", "artist": "", "pages": [{"path": "songs/song-1-test/page-001.png", "sha256": digest}]}]}
+    manifest = {"schema": "lyrics-prompter/khadas-list", "version": 1, "display": {"width": 1680, "height": 1050}, "opening": None, "songs": [{"id": "song-1-test", "title": "Test", "artist": "", "pages": [{"path": "songs/song-1-test/page-001.png", "sha256": digest}]}]}
     (package_root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 
 
@@ -56,6 +56,27 @@ class PlayerTests(unittest.TestCase):
             self.assertIs(store.active, first)
             self.assertTrue(first.root.exists())
             store.close()
+
+    def test_portrait_package_is_rejected(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); package(root)
+            package_root = root / PACKAGE_DIR
+            manifest_path = package_root / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["display"] = {"width": 1050, "height": 1680}
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ImportErrorMessage, "1680×1050"):
+                validate_package(package_root)
+
+            manifest["display"] = {"width": 1680, "height": 1050}
+            page_path = package_root / manifest["songs"][0]["pages"][0]["path"]
+            contents = png(1050, 1680)
+            page_path.write_bytes(contents)
+            manifest["songs"][0]["pages"][0]["sha256"] = hashlib.sha256(contents).hexdigest()
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ImportErrorMessage, "1680×1050"):
+                validate_package(package_root)
 
     def test_navigation(self):
         import tempfile

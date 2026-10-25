@@ -1,7 +1,7 @@
 # Lyrics Prompter — Prompter offline
 
 Player Khadas VIM1S per scalette esportate dall'editor Sites: visualizza
-esclusivamente PNG statiche 1050×1680, senza impaginazione o accesso Internet.
+esclusivamente PNG statiche 1680×1050, senza impaginazione o accesso Internet.
 
 ## Componenti
 
@@ -17,14 +17,20 @@ Gli export singoli e le cartelle contenenti più scalette sono entrambi
 supportati; dettagli in `khadas-player/README.md`.
 
 Prev/Next navigano tra pagine e brani. Select apre un brano e torna alla
-scaletta. Nella scaletta, tenere Prev/Next premuto cambia pagina di elenco;
+scaletta. La scaletta mostra fino a 20 voci per pagina in due colonne:
+prima dall'alto in basso a sinistra, poi a destra. Nella scaletta,
+tenere Prev/Next premuto cambia pagina di elenco;
 tenere Select premuto per circa un secondo apre la richiesta di importazione.
 L'inserimento di una USB durante un brano non interrompe la visualizzazione.
+Tenere Prev e Next premuti insieme per tre secondi apre il menu alimentazione.
+Prev/Next scelgono tra Riavvia, Annulla e Spegni; Select conferma. Il menu
+parte sempre da Annulla e non interrompe un'importazione in corso.
 
 ## Verifiche
 
 ```sh
 python3 -m unittest discover -s khadas-player -v
+python3 -m unittest discover -s pedale-3-pulsanti -v
 ```
 
 Il controllo grafico `khadas-player/check_import_layout.py` va eseguito
@@ -48,10 +54,8 @@ RESET non esegue un arresto ordinato.
 
 ## Limiti noti
 
-Il codice della pedaliera è un prototipo: usa `keyboard.send`, quindi invia
-un clic completo alla pressione e non mantiene il tasto premuto fino al
-rilascio fisico. Prima di usarlo con i comandi prolungati del player occorre
-adattare e collaudare la gestione di pressione/rilascio sul pedale reale.
-La navigazione e le pressioni prolungate del player sono state provate con
-una tastiera USB. È ancora raccomandata una prova prolungata con l'hardware
-definitivo prima dell'uso in concerto.
+Il codice della pedaliera mantiene Prev/Next premuti fino al rilascio fisico
+e riconosce la pressione simultanea prima di inviare i singoli comandi.
+Il file `pedale-3-pulsanti/code.py` va caricato sul Pico e i tempi dei pedali
+reali vanno collaudati prima dell'uso in concerto. Su una tastiera USB il menu
+alimentazione si apre anche con `F12`.

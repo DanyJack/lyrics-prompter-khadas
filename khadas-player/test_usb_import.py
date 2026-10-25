@@ -101,7 +101,7 @@ class SelectHoldTests(unittest.TestCase):
         self.keys = SimpleNamespace(KEY_Escape=9, KEY_Page_Up=10, KEY_Left=11, KEY_Up=12,
                                     KEY_Page_Down=13, KEY_Right=14, KEY_Down=15,
                                     KEY_Return=16, KEY_KP_Enter=17, KEY_space=18,
-                                    keyval_name=str)
+                                    KEY_F12=19, keyval_name=str)
         for name, value in [('GLib', self.clock), ('Gdk', self.keys)]:
             patcher = patch.object(player, name, value, create=True)
             patcher.start()
