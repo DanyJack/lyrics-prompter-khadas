@@ -8,8 +8,8 @@ Il monitor e le pagine sono orizzontali (1680×1050). La scaletta presenta
 20 voci per pagina in due colonne di 10: Prev/Next scorrono prima la colonna
 sinistra dall'alto al basso e poi quella destra. Una pressione lunga di
 Prev/Next passa alla pagina precedente/successiva dell'elenco.
-Tenere insieme Prev e Next per tre secondi apre il menu alimentazione.
-Prev/Next scelgono Riavvia, Annulla o Spegni; Select conferma. La selezione
+Tenere insieme Prev e Next per tre secondi apre il menu di spegnimento.
+Prev/Next scelgono Annulla o Spegni; Select conferma. La selezione
 iniziale è Annulla. Da tastiera USB si può aprire lo stesso menu con `F12`.
 Durante una copia da USB il menu resta disabilitato.
 

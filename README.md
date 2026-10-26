@@ -22,8 +22,8 @@ prima dall'alto in basso a sinistra, poi a destra. Nella scaletta,
 tenere Prev/Next premuto cambia pagina di elenco;
 tenere Select premuto per circa un secondo apre la richiesta di importazione.
 L'inserimento di una USB durante un brano non interrompe la visualizzazione.
-Tenere Prev e Next premuti insieme per tre secondi apre il menu alimentazione.
-Prev/Next scelgono tra Riavvia, Annulla e Spegni; Select conferma. Il menu
+Tenere Prev e Next premuti insieme per tre secondi apre il menu di spegnimento.
+Prev/Next scelgono tra Annulla e Spegni; Select conferma. Il menu
 parte sempre da Annulla e non interrompe un'importazione in corso.
 
 ## Verifiche

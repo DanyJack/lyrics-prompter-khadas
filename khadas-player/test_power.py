@@ -1,4 +1,4 @@
-"""Power menu safety checks without requesting an actual reboot."""
+"""Power menu safety checks without requesting an actual shutdown."""
 import io
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -20,7 +20,7 @@ class PowerScreenTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         self.screen = player.PowerScreen.__new__(player.PowerScreen)
-        self.screen.selection = 1
+        self.screen.selection = 0
         self.screen.pressed = set()
         self.screen.busy = False
         self.screen.error = ""
@@ -35,12 +35,12 @@ class PowerScreenTests(unittest.TestCase):
 
     def test_choice_requires_select_and_ignores_key_repeat(self):
         with patch.object(self.screen, "confirm") as confirm:
-            self.press(KEYS.KEY_Left)
-            self.assertEqual(self.screen.selection, 0)
-            self.press(KEYS.KEY_Left)
-            self.assertEqual(self.screen.selection, 0)
+            self.press(KEYS.KEY_Right)
+            self.assertEqual(self.screen.selection, 1)
+            self.press(KEYS.KEY_Right)
+            self.assertEqual(self.screen.selection, 1)
             confirm.assert_not_called()
-            self.release(KEYS.KEY_Left)
+            self.release(KEYS.KEY_Right)
             self.press(KEYS.KEY_Return)
             confirm.assert_called_once()
 
@@ -50,25 +50,22 @@ class PowerScreenTests(unittest.TestCase):
         self.screen.cancel.assert_called_once()
         run.assert_not_called()
 
-    def test_reboot_and_shutdown_use_separate_actions(self):
-        for selection, action in ((0, "reboot"), (2, "poweroff")):
-            with self.subTest(action=action):
-                self.screen.selection = selection
-                self.screen.box = SimpleNamespace(get_children=lambda: [],
-                                                  pack_start=Mock(), show_all=Mock())
-                with patch.object(player, "Gtk", SimpleNamespace(Label=lambda **kwargs: kwargs), create=True), \
-                     patch.object(player.subprocess, "run") as run:
-                    self.screen.confirm()
-                self.assertEqual(run.call_args.args[0], ["systemctl", "--no-ask-password", action])
-                self.assertTrue(self.screen.busy)
-                self.screen.busy = False
+    def test_shutdown_uses_poweroff_only(self):
+        self.screen.selection = 1
+        self.screen.box = SimpleNamespace(get_children=lambda: [],
+                                          pack_start=Mock(), show_all=Mock())
+        with patch.object(player, "Gtk", SimpleNamespace(Label=lambda **kwargs: kwargs), create=True), \
+             patch.object(player.subprocess, "run") as run:
+            self.screen.confirm()
+        self.assertEqual(run.call_args.args[0], ["systemctl", "--no-ask-password", "poweroff"])
+        self.assertTrue(self.screen.busy)
 
     def test_failed_power_action_preserves_selection(self):
-        self.screen.selection = 2
+        self.screen.selection = 1
         with patch.object(player.subprocess, "run", side_effect=subprocess.CalledProcessError(
             1, "systemctl", stderr="Access denied")), patch("sys.stderr", new_callable=io.StringIO) as stderr:
             self.screen.confirm()
-        self.assertEqual(self.screen.selection, 2)
+        self.assertEqual(self.screen.selection, 1)
         self.assertIn("non riuscita", self.screen.error)
         self.assertIn("Access denied", stderr.getvalue())
         self.screen.redraw.assert_called_once()

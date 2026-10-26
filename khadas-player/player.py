@@ -520,13 +520,13 @@ class KhadasPlayer:
 
 
 class PowerScreen:
-    """Explicit reboot/shutdown choice, opened by the pedal's held chord."""
+    """Explicit shutdown choice, opened by the pedal's held chord."""
 
-    ACTIONS = ("RIAVVIA", "ANNULLA", "SPEGNI")
+    ACTIONS = ("ANNULLA", "SPEGNI")
 
     def __init__(self, parent_window: Any) -> None:
         self.parent_window = parent_window
-        self.selection = 1  # Start on the safe choice.
+        self.selection = 0  # Start on the safe choice.
         self.pressed: set[int] = set()
         self.busy = False
         self.error = ""
@@ -550,7 +550,7 @@ class PowerScreen:
     def redraw(self) -> None:
         for child in self.box.get_children():
             self.box.remove(child)
-        title = Gtk.Label(label="RIAVVIO O SPEGNIMENTO")
+        title = Gtk.Label(label="SPEGNIMENTO")
         title.get_style_context().add_class("setlist-title")
         self.box.pack_start(title, False, False, 0)
         for index, action in enumerate(self.ACTIONS):
@@ -595,16 +595,15 @@ class PowerScreen:
         self.parent_window.present()
 
     def confirm(self) -> None:
-        if self.selection == 1:
+        if self.selection == 0:
             self.cancel()
             return
-        action = "reboot" if self.selection == 0 else "poweroff"
         try:
-            subprocess.run(["systemctl", "--no-ask-password", action], check=True, capture_output=True,
+            subprocess.run(["systemctl", "--no-ask-password", "poweroff"], check=True, capture_output=True,
                            text=True, timeout=8)
         except (OSError, subprocess.SubprocessError) as error:
             reason = getattr(error, "stderr", None) or str(error)
-            print(f"Comando di alimentazione fallito ({action}): {reason}", file=sys.stderr)
+            print(f"Comando di spegnimento fallito: {reason}", file=sys.stderr)
             self.error = "Operazione non riuscita. Select: riprova; Prev/Next: scegli."
             self.redraw()
             return
