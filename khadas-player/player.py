@@ -600,11 +600,12 @@ class PowerScreen:
             return
         action = "reboot" if self.selection == 0 else "poweroff"
         try:
-            subprocess.run(["loginctl", action], check=True, capture_output=True,
+            subprocess.run(["systemctl", "--no-ask-password", action], check=True, capture_output=True,
                            text=True, timeout=8)
-        except (OSError, subprocess.SubprocessError):
-            self.error = "Comando non riuscito. Select: annulla e riprova."
-            self.selection = 1
+        except (OSError, subprocess.SubprocessError) as error:
+            reason = getattr(error, "stderr", None) or str(error)
+            print(f"Comando di alimentazione fallito ({action}): {reason}", file=sys.stderr)
+            self.error = "Operazione non riuscita. Select: riprova; Prev/Next: scegli."
             self.redraw()
             return
         self.busy = True

@@ -1,4 +1,5 @@
 """Power menu safety checks without requesting an actual reboot."""
+import io
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 import subprocess
@@ -58,16 +59,18 @@ class PowerScreenTests(unittest.TestCase):
                 with patch.object(player, "Gtk", SimpleNamespace(Label=lambda **kwargs: kwargs), create=True), \
                      patch.object(player.subprocess, "run") as run:
                     self.screen.confirm()
-                self.assertEqual(run.call_args.args[0], ["loginctl", action])
+                self.assertEqual(run.call_args.args[0], ["systemctl", "--no-ask-password", action])
                 self.assertTrue(self.screen.busy)
                 self.screen.busy = False
 
-    def test_failed_power_action_returns_to_cancel(self):
+    def test_failed_power_action_preserves_selection(self):
         self.screen.selection = 2
-        with patch.object(player.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "loginctl")):
+        with patch.object(player.subprocess, "run", side_effect=subprocess.CalledProcessError(
+            1, "systemctl", stderr="Access denied")), patch("sys.stderr", new_callable=io.StringIO) as stderr:
             self.screen.confirm()
-        self.assertEqual(self.screen.selection, 1)
-        self.assertIn("non riuscito", self.screen.error)
+        self.assertEqual(self.screen.selection, 2)
+        self.assertIn("non riuscita", self.screen.error)
+        self.assertIn("Access denied", stderr.getvalue())
         self.screen.redraw.assert_called_once()
 
 
